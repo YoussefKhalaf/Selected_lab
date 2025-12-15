@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package ui;
 
 import factory.LoanFactory;
@@ -21,8 +17,8 @@ import ui.LoanListForm;
  */
 public class LoanForm extends javax.swing.JFrame {
 
-   private LoanService loanService;
-    private CustomerService customerService;
+   private proxy.LoanServiceProxy loanService; // Use proxy instead of direct service
+    private proxy.CustomerServiceProxy customerService; // Use proxy instead of direct service
     private LoanListForm parentForm;
     private DashboardForm dashboardForm;
 
@@ -38,8 +34,8 @@ public class LoanForm extends javax.swing.JFrame {
         initComponents();
         this.parentForm = parent;
         this.dashboardForm = dashboard;
-        this.loanService = new LoanService();
-        this.customerService = new CustomerService();
+        this.loanService = new proxy.LoanServiceProxy(); // Use proxy
+        this.customerService = new proxy.CustomerServiceProxy(); // Use proxy
         setupComboBoxes();
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }

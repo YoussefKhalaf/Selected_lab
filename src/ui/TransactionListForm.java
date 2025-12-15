@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package ui;
 
 import service.TransactionService;
@@ -20,24 +16,28 @@ import java.text.SimpleDateFormat;
  * @author ykhal
  */
 public class TransactionListForm extends javax.swing.JFrame {
+    
+    private proxy.TransactionServiceProxy transactionService; // Use proxy
+    private proxy.AccountServiceProxy accountService; // Use proxy
+    private proxy.CustomerServiceProxy customerService; // Use proxy
+    private Map<Integer, String> accountNames; // Keep this for mapping account IDs
+    private boolean isInitializing = true; // Guard to prevent events during initialization
 
-    private TransactionService transactionService;
-    private AccountService accountService;
     private DefaultTableModel tableModel;
-    private Map<Integer, String> accountNames;
     
     /**
      * Creates new form TransactionListForm
      */
     public TransactionListForm() {
+        transactionService = new proxy.TransactionServiceProxy(); // Use proxy
+        accountService = new proxy.AccountServiceProxy(); // Use proxy
+        customerService = new proxy.CustomerServiceProxy(); // Use proxy
+        accountNames = new HashMap<>(); // Initialize the map
         initComponents();
-        transactionService = new TransactionService();
-        accountService = new AccountService();
-        accountNames = new HashMap<>();
-        setupTable();
-        loadAccounts();
-        loadTransactions();
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setupTable(); // Initialize table model before any operations
+        setupAccountFilter();
+        isInitializing = false; // Allow events after initialization
+        refreshTable();
     }
 
     private void setupTable() {
@@ -51,49 +51,65 @@ public class TransactionListForm extends javax.swing.JFrame {
         jTable1.setModel(tableModel);
     }
     
-    private void loadAccounts() {
+    private void setupAccountFilter() {
+        // Remove action listener temporarily to prevent events during initialization
+        cmbAccountFilter.removeActionListener(cmbAccountFilter.getActionListeners()[0]);
+        
         cmbAccountFilter.removeAllItems();
         cmbAccountFilter.addItem("All Accounts");
+        accountNames.clear(); // Clear the map
         
         try {
             List<Account> accounts = accountService.getAll();
             for (Account account : accounts) {
-                // Get customer name for this account
-                Map<String, Object> accountInfo = accountService.getAccountWithCustomerName(account.getAccountId());
                 String customerName = "Unknown";
-                if (accountInfo != null && accountInfo.containsKey("customerName")) {
-                    customerName = (String) accountInfo.get("customerName");
+                
+                try {
+                    customerName = customerService.getCustomerName(account.getCustomerId());
+                } catch (Exception e) {
+                    customerName = "Unknown";
                 }
                 
                 String accountDisplay = account.getAccountType() + " - " + account.getAccountId() + " (" + customerName + ")";
                 cmbAccountFilter.addItem(accountDisplay);
-                accountNames.put(account.getAccountId(), accountDisplay);
+                accountNames.put(account.getAccountId(), accountDisplay); // Populate the map
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error loading accounts: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        
+        // Re-add the action listener
+        cmbAccountFilter.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmbAccountFilterActionPerformed(evt);
+            }
+        });
     }
     
-    private void loadTransactions() {
+    private void refreshTable() {
+        // Defensive check
+        if (tableModel == null) {
+            return;
+        }
+        
         try {
             tableModel.setRowCount(0);
             List<Transaction> transactions = transactionService.getAll();
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             
             for (Transaction t : transactions) {
-                String accountName = accountNames.getOrDefault(t.getAccountId(), "Unknown Account");
-                tableModel.addRow(new Object[]{
+                String accountInfo = accountNames.getOrDefault(t.getAccountId(), "Unknown Account");
+                Object[] row = {
                     t.getTransactionId(),
-                    accountName,
+                    accountInfo,
                     t.getTransactionType(),
-                    String.format("%.2f", t.getAmount()),
-                    dateFormat.format(t.getTransactionDate())
-                });
+                    t.getAmount(),
+                    t.getTransactionDate()
+                };
+                tableModel.addRow(row);
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error loading transactions: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error loading transactions: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
     
@@ -220,10 +236,19 @@ public class TransactionListForm extends javax.swing.JFrame {
     }//GEN-LAST:event_btnBackActionPerformed
     
     private void cmbAccountFilterActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbAccountFilterActionPerformed
+        // Prevent action during initialization
+        if (isInitializing) {
+            return;
+        }
         filterTransactions();
     }//GEN-LAST:event_cmbAccountFilterActionPerformed
     
     private void filterTransactions() {
+        // Defensive check
+        if (tableModel == null) {
+            return;
+        }
+        
         try {
             tableModel.setRowCount(0);
             List<Transaction> transactions;

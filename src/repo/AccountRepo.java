@@ -160,4 +160,38 @@ public class AccountRepo {
         
         return null;
     }
+    
+    // Add a method to delete an account
+    public boolean delete(int id) {
+        String sql = "DELETE FROM Accounts WHERE account_id=?";
+
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+
+        } catch(Exception ex) { ex.printStackTrace(); }
+
+        return false;
+    }
+    
+    // Add a method to update an account (not just balance)
+    public boolean update(Account account) {
+        String sql = "UPDATE Accounts SET customer_id=?, account_type=?, balance=? WHERE account_id=?";
+
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, account.getCustomerId());
+            ps.setString(2, account.getAccountType());
+            ps.setDouble(3, account.getBalance());
+            ps.setInt(4, account.getAccountId());
+
+            return ps.executeUpdate() > 0;
+
+        } catch(Exception ex) { ex.printStackTrace(); }
+
+        return false;
+    }
 }

@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package ui;
 
 
@@ -23,28 +19,11 @@ import javax.swing.JTextField;
  */
 public class AccountForm extends javax.swing.JFrame {
 
-    public AccountForm(AccountService accountService, CustomerService customerService, AccountListForm parentForm, JButton btnCancel, JButton btnCreateAccount, JButton btnSave, JComboBox<String> cmbAccountType, JComboBox<String> cmbCustomer, JTextField txtInitialBalance) throws HeadlessException {
-        this.accountService = accountService;
-        this.customerService = customerService;
-        this.parentForm = parentForm;
-        this.btnCancel = btnCancel;
-        this.btnCreateAccount = btnCreateAccount;
-        this.cmbAccountType = cmbAccountType;
-        this.cmbCustomer = cmbCustomer;
-        this.txtInitialBalance = txtInitialBalance;
-    }
-
-  
-   
-    
-    private AccountService accountService;
-    private CustomerService customerService;
+    private service.AccountService accountService;
+    private service.CustomerService customerService;
     private AccountListForm parentForm;
     private DashboardForm dashboardForm;
 
-    /**
-     * Creates new form AccountForm
-     */
     public AccountForm() {
         this(null);
     }
@@ -54,16 +33,17 @@ public class AccountForm extends javax.swing.JFrame {
     }
     
     public AccountForm(AccountListForm parent, DashboardForm dashboard) {
-        initComponents();
+        initComponents(); // لازم يتنادى عليه أول حاجة عشان يرسم الشاشة
         this.parentForm = parent;
         this.dashboardForm = dashboard;
-        this.accountService = new AccountService();
-        this.customerService = new CustomerService();
+        
+        // هنا بنعرف الـ Proxy
+        this.accountService = new proxy.AccountServiceProxy();
+        this.customerService = new proxy.CustomerServiceProxy();
         
         setupComboBoxes();
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }
-    
     private void setupComboBoxes() {
         // Setup account types
         cmbAccountType.removeAllItems();

@@ -14,8 +14,8 @@ import service.LoanService;
 
 public class LoanListForm extends javax.swing.JFrame {
 
-    private LoanService loanService;
-    private CustomerService customerService;
+    private proxy.LoanServiceProxy loanService; // Use proxy instead of direct service
+    private proxy.CustomerServiceProxy customerService; // Use proxy instead of direct service
     private DefaultTableModel tableModel;
     private Map<Integer, String> customerNames;
     private DashboardForm dashboardForm;
@@ -24,15 +24,13 @@ public class LoanListForm extends javax.swing.JFrame {
         this(null);
     }
     
-    public LoanListForm(DashboardForm dashboard) {
+    public LoanListForm(DashboardForm dashboardForm) {
+        this.dashboardForm = dashboardForm;
+        this.loanService = new proxy.LoanServiceProxy(); // Use proxy
+        this.customerService = new proxy.CustomerServiceProxy(); // Use proxy
         initComponents();
-        this.dashboardForm = dashboard;
-        loanService = new LoanService();
-        customerService = new CustomerService();
-        loadCustomerNames();
-        setupTable();
-        loadLoans();
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setupTable(); // Initialize table model before using it
+        refreshTable();
     }
 
     private void loadCustomerNames() {

@@ -1,4 +1,3 @@
-
 package ui;
 
 import service.AccountService;
@@ -9,11 +8,11 @@ import java.util.List;
 
 
 public class AccountListForm extends javax.swing.JFrame {
-
-    private AccountService accountService;
-    private DefaultTableModel tableModel;
-    private DashboardForm dashboardForm;
     
+    private DashboardForm dashboardForm;
+    // Use the proxy instead of the direct service
+    private proxy.AccountServiceProxy accountService;
+    private DefaultTableModel tableModel;
     /**
      * Creates new form AccountListForm
      */
@@ -21,13 +20,12 @@ public class AccountListForm extends javax.swing.JFrame {
         this(null);
     }
     
-    public AccountListForm(DashboardForm dashboard) {
+    public AccountListForm(DashboardForm dashboardForm) {
+        this.dashboardForm = dashboardForm;
+        this.accountService = new proxy.AccountServiceProxy();
         initComponents();
-        this.dashboardForm = dashboard;
-        accountService = new AccountService();
-        setupTable();
-        loadAccounts();
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setupTable(); // Initialize table model before using it
+        refreshTable();
     }
 
     private void setupTable() {

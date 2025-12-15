@@ -132,6 +132,31 @@ public class CustomerRepo {
         return null;
     }
     
+    // Add a method to find customer by ID
+    public Customer findById(int id) {
+        String sql = "SELECT * FROM Customers WHERE customer_id=?";
+
+        try(Connection conn = DBConnection.getConnection();
+            PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+
+            if(rs.next()) {
+                return new CustomerBuilder()
+                    .customerId(rs.getInt("customer_id"))
+                    .fullName(rs.getString("full_name"))
+                    .email(rs.getString("email"))
+                    .phone(rs.getString("phone"))
+                    .password(rs.getString("password"))
+                    .build();
+            }
+
+        } catch(Exception ex) { ex.printStackTrace(); }
+
+        return null;
+    }
+    
     // Check if customer has any accounts
     public boolean hasAccounts(int customerId) {
         String sql = "SELECT COUNT(*) FROM Accounts WHERE customer_id=?";

@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package ui;
 
 import service.CustomerService;
@@ -16,7 +12,7 @@ import java.util.List;
  */
 public class CustomerListForm extends javax.swing.JFrame {
 
-    private CustomerService customerService;
+    private proxy.CustomerServiceProxy customerService; // Use proxy instead of direct service
     private DefaultTableModel tableModel;
     private DashboardForm dashboardForm;
 
@@ -28,12 +24,11 @@ public class CustomerListForm extends javax.swing.JFrame {
     }
     
     public CustomerListForm(DashboardForm dashboardForm) {
+        this.dashboardForm = dashboardForm;
+        this.customerService = new proxy.CustomerServiceProxy(); // Use proxy
         initComponents();
-        this.dashboardForm=dashboardForm;
-        customerService = new CustomerService();
-        setupTable();
-        loadCustomers();
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setupTable(); // Initialize table model before using it
+        refreshTable();
     }
     
     private void setupTable() {

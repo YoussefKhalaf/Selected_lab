@@ -5,6 +5,8 @@ import repo.AccountRepo;
 import repo.TransactionRepo;
 import model.Customer;
 import java.util.List;
+// Import the proxy
+import proxy.CustomerServiceProxy;
 
 public class CustomerService {
 
@@ -47,5 +49,16 @@ public class CustomerService {
     // Get customer account count
     public int getCustomerAccountCount(int customerId) {
         return repo.getAccountCount(customerId);
+    }
+    
+    // New method to find customer by ID
+    public Customer getById(int id) {
+        return repo.findById(id);
+    }
+    
+    // New method to get customer name by ID
+    public String getCustomerName(int customerId) {
+        Customer customer = repo.findById(customerId);
+        return customer != null ? customer.getFullName() : "Unknown";
     }
 }

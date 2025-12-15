@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package ui;
 
 import singleton.TransactionManager;
@@ -18,53 +14,61 @@ import service.CustomerService;
  */
 public class TransactionForm extends javax.swing.JFrame {
 
-    private TransactionManager transactionManager;
-    private AccountService accountService;
-    private CustomerService customerService;
-
+    private singleton.TransactionManager transactionManager;
+    private proxy.AccountServiceProxy accountService; // Use proxy instead of direct service
+    private proxy.CustomerServiceProxy customerService; // Use proxy
+    
     /**
      * Creates new form TransactionForm
      */
     public TransactionForm() {
+        transactionManager = singleton.TransactionManager.getInstance();
+        accountService = new proxy.AccountServiceProxy(); // Use proxy
+        customerService = new proxy.CustomerServiceProxy(); // Use proxy
         initComponents();
-        transactionManager = TransactionManager.getInstance();
-        accountService = new AccountService();
-        customerService = new CustomerService();
         setupComboBoxes();
-        updateUI();
     }
     
     private void setupComboBoxes() {
-        cmbTransactionType.removeAllItems();
-        cmbTransactionType.addItem("Deposit");
-        cmbTransactionType.addItem("Withdraw");
-        cmbTransactionType.addItem("Transfer");
-        
-        cmbFromAccount.removeAllItems();
-        cmbToAccount.removeAllItems();
-        
-        List<Account> accounts = accountService.getAll();
-        for (Account a : accounts) {
-            // Get customer name for this account
-            Map<String, Object> accountInfo = accountService.getAccountWithCustomerName(a.getAccountId());
-            String customerName = "Unknown";
-            if (accountInfo != null && accountInfo.containsKey("customerName")) {
-                customerName = (String) accountInfo.get("customerName");
+        try {
+            // Setup transaction types
+            cmbTransactionType.removeAllItems();
+            cmbTransactionType.addItem("Deposit");
+            cmbTransactionType.addItem("Withdraw");
+            cmbTransactionType.addItem("Transfer");
+            
+            cmbFromAccount.removeAllItems();
+            cmbToAccount.removeAllItems();
+            
+            List<Account> accounts = accountService.getAll();
+            for (Account a : accounts) {
+                // Get customer name for this account
+                String customerName = "Unknown";
+                try {
+                    customerName = customerService.getCustomerName(a.getCustomerId());
+                } catch (Exception e) {
+                    customerName = "Unknown";
+                }
+                
+                String display = a.getAccountId() + " - " + a.getAccountType() + " (" + customerName + ") (Balance: " + String.format("%.2f", a.getBalance()) + ")";
+                cmbFromAccount.addItem(display);
+                cmbToAccount.addItem(display);
             }
             
-            String display = a.getAccountId() + " - " + a.getAccountType() + " (" + customerName + ") (Balance: " + String.format("%.2f", a.getBalance()) + ")";
-            cmbFromAccount.addItem(display);
-            cmbToAccount.addItem(display);
+            // Add listener for UI updates
+            cmbTransactionType.addActionListener(e -> updateUI());
+        } catch (Exception e) {
+            e.printStackTrace();
+            lblTxtMessage.setText("Error loading accounts: " + e.getMessage());
         }
-        
-        cmbTransactionType.addActionListener(e -> updateUI());
     }
-    
+
     private void updateUI() {
         String type = (String) cmbTransactionType.getSelectedItem();
         boolean isTransfer = "Transfer".equals(type);
+        
+        // Enable/disable to account based on transaction type
         cmbToAccount.setEnabled(isTransfer);
-        cmbToAccount.setVisible(isTransfer);
     }
 
     /**
@@ -204,20 +208,9 @@ public class TransactionForm extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnExecuteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExecuteActionPerformed
+    private void btnExecuteActionPerformed(java.awt.event.ActionEvent evt) {
         if (cmbFromAccount.getSelectedIndex() == -1) {
-            lblTxtMessage.setText("Please select an account");
-            return;
-        }
-        
-        double amount = 0;
-        try {
-            amount = Double.parseDouble(txtAmount.getText().trim());
-            if (amount <= 0) {
-                throw new NumberFormatException("Amount must be positive");
-            }
-        } catch (NumberFormatException ex) {
-            lblTxtMessage.setText("Please enter a valid amount");
+            lblTxtMessage.setText("Please select source account");
             return;
         }
         
@@ -225,8 +218,31 @@ public class TransactionForm extends javax.swing.JFrame {
         int fromAccountId = Integer.parseInt(fromAccountStr.split(" - ")[0]);
         
         String transactionType = (String) cmbTransactionType.getSelectedItem();
+        if (transactionType == null) {
+            lblTxtMessage.setText("Please select transaction type");
+            return;
+        }
+        
+        String amountStr = txtAmount.getText().trim();
+        if (amountStr.isEmpty()) {
+            lblTxtMessage.setText("Please enter amount");
+            return;
+        }
+        
+        double amount;
+        try {
+            amount = Double.parseDouble(amountStr);
+            if (amount <= 0) {
+                lblTxtMessage.setText("Amount must be positive");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            lblTxtMessage.setText("Invalid amount format");
+            return;
+        }
+        
         boolean success = false;
-        String message = "";
+        String message = "Transaction failed";
         
         if ("Deposit".equals(transactionType)) {
             success = transactionManager.deposit(fromAccountId, amount);

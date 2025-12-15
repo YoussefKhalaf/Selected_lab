@@ -4,6 +4,8 @@ import repo.AccountRepo;
 import model.Account;
 import java.util.List;
 import java.util.Map;
+// Import the proxy
+import proxy.AccountServiceProxy;
 
 public class AccountService {
 
@@ -41,5 +43,14 @@ public class AccountService {
     // Get account with customer name
     public Map<String, Object> getAccountWithCustomerName(int accountId) {
         return repo.getAccountWithCustomerName(accountId);
+    }
+    
+    // New methods for full account management
+    public boolean update(Account account) {
+        return repo.update(account);
+    }
+    
+    public boolean delete(int id) {
+        return repo.delete(id);
     }
 }

@@ -15,11 +15,21 @@ import javax.swing.JOptionPane;
  * @author ykhal
  */
 public class DashboardForm extends javax.swing.JFrame {
+    
+    // Use proxies instead of direct services
+    private proxy.CustomerServiceProxy customerService;
+    private proxy.AccountServiceProxy accountService;
+    private proxy.LoanServiceProxy loanService; // Use proxy for LoanService too
 
     /**
      * Creates new form DashboardForm
      */
     public DashboardForm() {
+        // Initialize proxies
+        customerService = new proxy.CustomerServiceProxy();
+        accountService = new proxy.AccountServiceProxy();
+        loanService = new proxy.LoanServiceProxy(); // Use proxy
+        
         initComponents();
         loadStatistics();
         updateWelcomeMessage();
@@ -27,9 +37,10 @@ public class DashboardForm extends javax.swing.JFrame {
     
     private void loadStatistics() {
         try {
-            CustomerService customerService = new CustomerService();
-            AccountService accountService = new AccountService();
-            LoanService loanService = new LoanService();
+            // Use proxies instead of direct services
+            // CustomerService customerService = new CustomerService();
+            // AccountService accountService = new AccountService();
+            // LoanService loanService = new LoanService();
             
             int totalCustomers = 0;
             int totalAccounts = 0;

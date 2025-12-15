@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package ui;
 
 import service.CustomerService;
@@ -14,7 +10,7 @@ import javax.swing.JOptionPane;
  */
 public class CustomerForm extends javax.swing.JFrame {
 
-    private CustomerService customerService;
+    private proxy.CustomerServiceProxy customerService; // Use proxy instead of direct service
     private Customer customer;
     private CustomerListForm parentForm;
     private DashboardForm dashboardForm;
@@ -36,7 +32,7 @@ public class CustomerForm extends javax.swing.JFrame {
         this.parentForm = parent;
         this.customer = customer;
         this.dashboardForm = dashboard;
-        this.customerService = new CustomerService();
+        this.customerService = new proxy.CustomerServiceProxy(); // Use proxy
         this.isEditMode = (customer != null);
         
         if (isEditMode) {
